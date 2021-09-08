@@ -69,10 +69,17 @@ def load_part(
     for dcm_file in dcm_file_list:
         dcm = dcmread(os.path.join(data_path, dcm_file))
         array = dcm.pixel_array
+        rescale_intercept = int(float(dcm.RescaleIntercept))
         assert float(dcm.RescaleSlope) == 1.
-        assert float(dcm.RescaleIntercept) == int(float(dcm.RescaleIntercept))
-        assert array.dtype == np.int16
-        array += int(float(dcm.RescaleIntercept))
+        assert float(dcm.RescaleIntercept) == rescale_intercept
+        assert array.dtype == np.int16 or (
+            array.dtype == np.uint16 and
+            min(int(array.min()), int(array.min()) + rescale_intercept) >=
+                    np.iinfo(np.int16).min and
+            max(int(array.max()), int(array.max()) + rescale_intercept) <=
+                    np.iinfo(np.int16).max)
+        array = array.astype(np.int16)
+        array += rescale_intercept
         slices.append(array)
     volume = np.stack(slices)
     # # in the initial version of this dataset no rescale was performed:
