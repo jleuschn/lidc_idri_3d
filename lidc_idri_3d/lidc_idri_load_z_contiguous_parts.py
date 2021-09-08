@@ -65,8 +65,19 @@ def load_part(
     with open(os.path.join(contiguous_parts_file_lists_path,
                            'part_{:04d}.csv'.format(part_index)), 'r') as f:
         dcm_file_list = f.read().splitlines()
-    volume = np.stack([dcmread(os.path.join(data_path, dcm_file)).pixel_array
-                       for dcm_file in dcm_file_list])
+    slices = []
+    for dcm_file in dcm_file_list:
+        dcm = dcmread(os.path.join(data_path, dcm_file))
+        array = dcm.pixel_array
+        assert float(dcm.RescaleSlope) == 1.
+        assert float(dcm.RescaleIntercept) == int(float(dcm.RescaleIntercept))
+        assert array.dtype == np.int16
+        array += int(float(dcm.RescaleIntercept))
+        slices.append(array)
+    volume = np.stack(slices)
+    # # in the initial version of this dataset no rescale was performed:
+    # volume = np.stack([dcmread(os.path.join(data_path, dcm_file)).pixel_array
+    #                    for dcm_file in dcm_file_list])
     return volume
 
 if __name__ == '__main__':
