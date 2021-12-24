@@ -40,6 +40,10 @@ for i in tqdm(range(get_num_parts(
             bboxes_out_filename = os.path.join(
                 out_path, '{:03d}_bboxes.npy'.format(j))
             copy(bboxes_filename, bboxes_out_filename)
+            features_filename = os.path.join(path, basename + '_features.json')
+            features_out_filename = os.path.join(
+                out_path, '{:03d}_features.json'.format(j))
+            copy(features_filename, features_out_filename)
             for k in range(len(bboxes)):
                 nodule_filename = os.path.join(
                     path, basename + '_nodule{:d}.npy'.format(k))

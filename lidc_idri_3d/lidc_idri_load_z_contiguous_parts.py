@@ -9,9 +9,6 @@ import numpy as np
 from tqdm import tqdm
 from pydicom.filereader import dcmread
 
-OUTPUT_PATH = '/localdata/LIDC-IDRI_z_contiguous_parts'
-os.makedirs(OUTPUT_PATH, exist_ok=True)
-
 CONTIGUOUS_PARTS_FILE_LISTS_PATH = (
     '/localdata/LIDC-IDRI_z_contiguous_parts/file_lists')
 
@@ -35,7 +32,7 @@ def get_num_parts(
     num_parts : int
         Total number of contiguous parts.
     """
-    with open(os.path.join(CONTIGUOUS_PARTS_FILE_LISTS_PATH, 'info.json'),
+    with open(os.path.join(contiguous_parts_file_lists_path, 'info.json'),
               'r') as f:
         num_parts = len(json.load(f)['info_parts'])
     return num_parts
@@ -89,6 +86,10 @@ def load_part(
 
 if __name__ == '__main__':
     num_parts = get_num_parts()
+
+    OUTPUT_PATH = '/localdata/LIDC-IDRI_z_contiguous_parts'
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
+
     print('Total number of parts:', num_parts)
     for i in tqdm(range(get_num_parts())):
         volume = load_part(i)

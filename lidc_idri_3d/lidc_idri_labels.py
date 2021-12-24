@@ -6,6 +6,7 @@ import numpy as np
 from pydicom.filereader import dcmread
 import pylidc as pl
 from pylidc.utils import consensus
+from pylidc.Annotation import feature_names
 
 OUTPUT_PATH = '/localdata/LIDC-IDRI_labels'
 os.makedirs(OUTPUT_PATH, exist_ok=True)
@@ -34,6 +35,7 @@ for ct_dir in tqdm(all_ct_dirs):
         scan = scans[0]
         labels = []
         bboxes = []
+        features = []
         nodules = scan.cluster_annotations()
         for j, nodule in enumerate(nodules):
             cmask, cbbox = consensus(nodule, ret_masks=False)
@@ -46,6 +48,14 @@ for ct_dir in tqdm(all_ct_dirs):
                     labels.append(cmask[:, :, z_ind])
                     bboxes.append((cbbox[0].start, cbbox[1].start,
                                    cbbox[0].stop, cbbox[1].stop))
+                    feature_dict_list = []
+                    for a in nodule:
+                        feature_dict = {
+                                k: v.item() for k, v in zip(
+                                        feature_names, a.feature_vals())}
+                        feature_dict['num_annotations'] = len(nodule)
+                        feature_dict_list.append(feature_dict)
+                    features.append(feature_dict_list)
                     print('z = {:f}'.format(z))
         if labels:
             for j, label in enumerate(labels):
@@ -59,3 +69,8 @@ for ct_dir in tqdm(all_ct_dirs):
                     OUTPUT_PATH, ct_dir,
                     os.path.splitext(dcm_file)[0] + '_bboxes.npy'),
                 np.stack(bboxes))
+            with open(os.path.join(
+                    OUTPUT_PATH, ct_dir,
+                    os.path.splitext(dcm_file)[0] + '_features.json'),
+                    'w') as f:
+                json.dump(features, f, indent=1)
